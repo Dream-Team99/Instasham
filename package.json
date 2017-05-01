@@ -1,22 +1,15 @@
 {
-  "name": "instasham",
-  "version": "1.0.0",
-  "description": "This is a clone of instagram written in react-native",
-  "main": "instasham-server",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Dream-Team99/Instasham.git"
-  },
-  "author": "Matthew Langford, Alex Mortenson, Andrew Langford",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Dream-Team99/Instasham/issues"
-  },
-  "homepage": "https://github.com/Dream-Team99/Instasham#readme",
-  "dependencies": {
+	"name": "Instasham",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"start": "node node_modules/react-native/local-cli/cli.js start",
+		"test": "jest"
+	},
+	"dependencies": {
+		"react": "16.0.0-alpha.6",
+		"react-native": "0.44.0",
+		"react-native-lock": "^0.6.0",
     "aws-sdk": "^2.48.0",
     "axios": "^0.16.1",
     "body-parser": "^1.17.1",
@@ -25,5 +18,14 @@
     "express-jwt": "^5.3.0",
     "massive": "^2.6.0",
     "socket.io": "^1.7.3"
-  }
+	},
+	"devDependencies": {
+		"babel-jest": "19.0.0",
+		"babel-preset-react-native": "1.9.1",
+		"jest": "19.0.2",
+		"react-test-renderer": "16.0.0-alpha.6"
+	},
+	"jest": {
+		"preset": "react-native"
+	}
 }
