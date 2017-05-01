@@ -15,5 +15,15 @@
   "bugs": {
     "url": "https://github.com/Dream-Team99/Instasham/issues"
   },
-  "homepage": "https://github.com/Dream-Team99/Instasham#readme"
+  "homepage": "https://github.com/Dream-Team99/Instasham#readme",
+  "dependencies": {
+    "aws-sdk": "^2.48.0",
+    "axios": "^0.16.1",
+    "body-parser": "^1.17.1",
+    "cors": "^2.8.3",
+    "express": "^4.15.2",
+    "express-jwt": "^5.3.0",
+    "massive": "^2.6.0",
+    "socket.io": "^1.7.3"
+  }
 }
