@@ -1,0 +1,19 @@
+{
+  "name": "instasham",
+  "version": "1.0.0",
+  "description": "This is a clone of instagram written in react-native",
+  "main": "instasham-server",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dream-Team99/Instasham.git"
+  },
+  "author": "Matthew Langford, Alex Mortenson, Andrew Langford",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dream-Team99/Instasham/issues"
+  },
+  "homepage": "https://github.com/Dream-Team99/Instasham#readme"
+}
