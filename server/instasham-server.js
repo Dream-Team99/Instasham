@@ -11,8 +11,8 @@ const cors = require(`cors`);
 const massive = require(`massive`);
 const corsOptions = {origin: 'http://localhost:3005'};
 const config = require(`./.server.config.js`);
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 const massiveInstance = massive.connectSync({connectionString: config.connectionString});
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
@@ -53,6 +53,17 @@ app.use(cors(corsOptions));
 
 app.use(express.static(`public`));
 
+
+// --------- SOCKET.IO CHAT-START -------------- //
+
+const chat = require('./chat.js')
+
+chat.connect(io)
+app.get('api/chat/search/:userid/:search', chat.searchFriends(db))
+app.post('/api/chat', chat.newMessage(io, db))
+app.get('/api/chat/:userid', chat.getMessages(db))
+
+// --------- SOCKET.IO CHAT-END --------------- //
 
 
 app.post('/upload', upload.single('photo'), (req, res, next) => {
@@ -217,7 +228,7 @@ app.get(`/api/getFollowing/count/:id`,(req,res)=>{
 
 
 
-app.listen(3005,()=> {
+server.listen(3005,()=> {
     console.log(`wub a dub dub!`)
 });
 
