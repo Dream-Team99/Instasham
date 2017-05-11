@@ -17,6 +17,15 @@ exports.searchFriends = function(db){
     })
   }
 }
+
+exports.findUser = function(db){
+  return (req, res) => {
+    db.run('SELECT * FROM users WHERE id = $1', [req.params.userid], (err, response) => {
+      if(err) console.log(err)
+      res.json(response[0])
+    })
+  }
+}
   
 exports.newMessage = function(io, db){
   return (req, res) => {
