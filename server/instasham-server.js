@@ -59,7 +59,7 @@ app.use(express.static(`public`));
 const chat = require('./chat.js')
 
 chat.connect(io)
-app.get('api/chat/search/:userid/:search', chat.searchFriends(db))
+app.get('/api/chat/search/:userid/:search', chat.searchFriends(db))
 app.post('/api/chat', chat.newMessage(io, db))
 app.get('/api/chat/:userid', chat.getMessages(db))
 
