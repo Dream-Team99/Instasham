@@ -11,7 +11,7 @@ exports.connect = function(io){
 exports.searchFriends = function(db){
   return (req, res) => {
     const query = 'SELECT * FROM following INNER JOIN users ON following.follower = users.id WHERE userid = $1 AND LOWER(username) LIKE LOWER($2)'
-    db.run(query, [req.params.userid, '%' + req.params.search '%'], (err, response) => {
+    db.run(query, [req.params.userid, `%${req.params.search}%`], (err, response) => {
       if(err) console.log(err)
       res.json(response)
     })
