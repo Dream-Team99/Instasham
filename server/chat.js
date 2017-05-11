@@ -39,9 +39,9 @@ exports.getMessages = function(db){
       let chats = {}
       response.forEach(message => {
         let added = false
-        let id = message.sender
+        let id = message.senderid
         if(id === req.params.userid) 
-          id = message.receiver
+          id = message.receiverid
         for(var prop in chats){
           if(prop === id){
             chats[prop].push(message)
