@@ -68,7 +68,6 @@ app.get('/api/chat/:userid', chat.getMessages(db))
 
 
 app.post('/upload', upload.single('photo'), (req, res, next) => {
-    console.log(`hi`, req.body)
     res.json(req.file)
 })
 
@@ -114,7 +113,11 @@ app.post(`/api/users/follower`, (req,res)=>{
             })
         }
     })
-
+})
+app.post(`/api/users/follower/delete`,(req,res)=>{
+    db.run(`delete from following where userid = $1 and follower = $2`,[req.body.userId, req.body.followerId],(err,result)=>{
+        res.status(200).json(`works`)
+    })
 })
 app.get(`/api/users/follower/:id`, (req,res)=>{
     db.run(`SELECT follower from following where userid = $1`,[req.params.id],(err,re)=>{
@@ -129,10 +132,57 @@ app.get(`/api/users/follower/:id`, (req,res)=>{
 
 app.post(`/api/users/post`, (req, res)=>{
     db.run(`INSERT INTO photos (userid, timestamp, url, post_text) VALUES($1,$2,$3,$4) returning userid, timestamp, url`,[req.body.id,req.body.timestamp, req.body.imageUrl, req.body.post_text], (err,re)=>{
-        if (re.length > 0) res.status(200).json(re)
+        if (err === null) res.status(200).json(re)
         else console.log(err)
     })
 })
+
+app.post(`/api/post/delete`, (req,res)=>{
+    const urlSplit = req.body.name.split('/')
+    const fileName = urlSplit[urlSplit.length-1]
+    s3.deleteObject({
+        Bucket: process.env.AWS_BUCKET,
+        Key: fileName
+    }, function(err){
+        if(err)console.log(err)
+        else{
+            db.run(`delete from likes l
+            where l.photoid = $1`,[req.body.photoid],(err,re)=>{
+                if(err === null){
+                    db.run(`delete from comments c
+                    where c.photoid = $1`, [req.body.photoid], (error,result)=>{
+                        if(error === null){
+                            db.run(`delete from photos p
+                            where p.id = $1`,[req.body.photoid],(ERR, respons)=>{
+                                if (ERR === null){
+                                    res.status(200).send(`works`)
+                                }
+                                else {
+                                    console.log(ERR)
+                                    res.status(403).send(ERR)
+                                }
+                            })
+                        }
+                        else{
+                            console.log(error)
+                            res.status(403).send(error)
+                        }
+                    })
+                }
+                else {
+                    console.log(err)
+                    res.status(403).send(`Bad Request`)
+                }
+            })
+        }
+    })
+
+})
+
+
+
+
+
 
 app.get(`/api/getFollowing/:id`,(req,res)=>{
     db.run(`select u.id as user_id,u.username, u.imageurl as user_image, 
@@ -145,10 +195,11 @@ app.get(`/api/getFollowing/:id`,(req,res)=>{
     (select follower from following
     where userid = $1)
     order by photo_id desc`,[req.params.id],((err,re)=>{
-        if(re) {
+        if(err === null) {
             res.status(200).json(re)
         }
         else {
+            console.log(err)
             res.status(403).json(err)
         }
     }))
@@ -216,10 +267,13 @@ app.get(`/api/getFollowing/count/:id`,(req,res)=>{
      where follower = $1`,[req.params.id],(err,follower)=>{
             db.run(`SELECT count(userid) from photos
                 where userid = $1`,[req.params.id],(err,result)=>{
-                if(result.length > 0){
+                if(err === null){
                     res.status(200).json({follower_count: follower[0].follower_count, following_count: following[0].following_count, post_count: result[0].count})
                 }
-                else console.log(err)
+                else {
+                    console.log(err)
+                    res.status(403).send(`bad`)
+                }
             })
         })
     })
