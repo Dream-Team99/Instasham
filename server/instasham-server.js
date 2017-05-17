@@ -71,9 +71,13 @@ app.post('/upload', upload.single('photo'), (req, res, next) => {
     res.json(req.file)
 })
 
+// Uploading a file to S3
+
 app.post(`/api/users`, (req,res)=>{
+    console.log(req.body)
     db.run(`select * from users where id = $1`,[req.body.profile.id],(err, re)=>{
-        if(re.length > 0){
+        console.log(re)
+        if(re || re.length > 0){
             db.run(`select * from photos where userid = $1`,[req.body.profile.id],(err,photos)=>{
                 if(photos.length > 0){
                     res.status(200).json({profile: re[0], photos: photos})
@@ -93,6 +97,9 @@ app.post(`/api/users`, (req,res)=>{
 
 });
 
+// The main login function to check if you already exist if not,
+// it will insert you into the database
+
 app.get(`/api/getUser`,(req,res)=>{
     if(req.query){
         db.run(`SELECT * from users where LOWER(username) like LOWER($1)`,[req.query.username + `%`],(err,re)=>{
@@ -100,7 +107,7 @@ app.get(`/api/getUser`,(req,res)=>{
         })
     }
 })
-
+// This is used for our search engine
 
 app.post(`/api/users/follower`, (req,res)=>{
     db.run(`Select * from following where userid = $1 and follower = $2`,[req.body.userId, req.body.followerId],(err,result)=>{
@@ -114,11 +121,17 @@ app.post(`/api/users/follower`, (req,res)=>{
         }
     })
 })
+
+// This checks to see if you are already following a person if not it will insert it into your following list
+
 app.post(`/api/users/follower/delete`,(req,res)=>{
     db.run(`delete from following where userid = $1 and follower = $2`,[req.body.userId, req.body.followerId],(err,result)=>{
         res.status(200).json(`works`)
     })
 })
+
+// Delete users from your following list
+
 app.get(`/api/users/follower/:id`, (req,res)=>{
     db.run(`SELECT follower from following where userid = $1`,[req.params.id],(err,re)=>{
         let follower = re.map((val)=>{
@@ -128,14 +141,17 @@ app.get(`/api/users/follower/:id`, (req,res)=>{
     })
 })
 
-
+// Gets user id from your following list and gives you back an array
+// this is used to find if someone is following you.
 
 app.post(`/api/users/post`, (req, res)=>{
-    db.run(`INSERT INTO photos (userid, timestamp, url, post_text) VALUES($1,$2,$3,$4) returning userid, timestamp, url`,[req.body.id,req.body.timestamp, req.body.imageUrl, req.body.post_text], (err,re)=>{
+    db.run(`INSERT INTO photos (userid, timestamp, url, post_text) VALUES($1,$2,$3,$4) returning id, userid, timestamp, url`,[req.body.id,req.body.timestamp, req.body.imageUrl, req.body.post_text], (err,re)=>{
         if (err === null) res.status(200).json(re)
         else console.log(err)
     })
 })
+
+// This endpoint will insert your photo into the database after its been uploaded to S3
 
 app.post(`/api/post/delete`, (req,res)=>{
     const urlSplit = req.body.name.split('/')
@@ -180,30 +196,30 @@ app.post(`/api/post/delete`, (req,res)=>{
 })
 
 
-
+// This is used to delete a post
 
 
 
 app.get(`/api/getFollowing/:id`,(req,res)=>{
-    db.run(`select u.id as user_id,u.username, u.imageurl as user_image, 
-    p.id as photo_id, p.url, p.post_text, p.timestamp, c.comment, c.userid as comment_userid, c.timestamp 
-    as comment_time, cu.username as comment_user, cu.imageurl, c.photoid as commented_photo from users u
+    db.run(`select u.id as user_id,u.username, u.imageurl as user_image,
+    p.id as photo_id, p.url, p.post_text, p.timestamp from users u
     join photos p on u.id = p.userid
-    left join comments c on c.photoid = p.id
-    left join users cu on cu.id = c.userid
-    where u.id in 
-    (select follower from following
+    where u.id in (select follower from following
     where userid = $1)
+    or u.id = $1
     order by photo_id desc`,[req.params.id],((err,re)=>{
         if(err === null) {
             res.status(200).json(re)
         }
         else {
             console.log(err)
-            res.status(403).json(err)
+            res.status(403).json(ERR)
         }
     }))
 })
+
+
+// This is used to get all the posts from the people you are following
 
 app.get(`/api/getSinglePost/:id`,(req,res)=>{
     db.run(`SELECT u.id as user_id, username, imageurl as user_image,p.id as photo_id, url, timestamp, post_text from users u
@@ -212,13 +228,18 @@ app.get(`/api/getSinglePost/:id`,(req,res)=>{
         res.status(200).json(response);
     })
 })
+
+// This is used for our Post component to find a single post by a user
+
 app.get(`/api/getComments/:photoId`,(req,res)=>{
     db.run(`SELECT userid, comment, timestamp, username, imageurl from comments c
 left join users u on u.id = c.userid where photoid = $1`,[req.params.photoId],(err,re)=>{
         res.status(200).json(re)
     })
 })
-// gets comments
+
+// This is used to gets comments by the photo id
+
 app.post(`/api/postComment`,(req,res)=>{
     db.run(`INSERT INTO comments (userid, photoid, comment, timestamp) values($1,$2,$3,$4)`,[req.body.userid, req.body.photoid,req.body.comment, req.body.timestamp],(err,response)=>{
         console.log(err)
@@ -230,14 +251,14 @@ app.post(`/api/postComment`,(req,res)=>{
     })
 })
 
-// posts comments
+// This is used to post comments on photos
 
 app.get(`/api/getLikes/:photoId`,(req,res)=>{
     db.run(`SELECT count(userid) as likes from likes where photoid = $1`,[req.params.photoId],(err,re)=>{
         res.status(200).json(re)
     })
 })
-//  Gets likes ^^
+//  This is used to get likes for a single post
 
 app.post(`/api/postLikes`, (req,res)=>{
     db.run(`SELECT userid  from likes where photoid = $1 and userid = $2`,[req.body.photoid,req.body.userid],(err,result)=> {
@@ -256,7 +277,7 @@ app.post(`/api/postLikes`, (req,res)=>{
     })
 })
 
-// posts likes
+// This is used to post likes if not already posted before
 
 app.get(`/api/getFollowing/count/:id`,(req,res)=>{
     db.run(`Select count(userid) as
@@ -279,7 +300,7 @@ app.get(`/api/getFollowing/count/:id`,(req,res)=>{
     })
 })
 
-
+// This is used to get the number of Posts, Followers and people the user is following
 
 
 
