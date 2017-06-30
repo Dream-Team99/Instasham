@@ -2,46 +2,44 @@
  * Created by beebe on 5/1/2017.
  */
 
-const express = require(`express`);
-const jwt = require(`express-jwt`);
-const app = module.exports = express();
-const axios = require(`axios`);
-const bodyParser = require(`body-parser`);
-const cors = require(`cors`);
-const massive = require(`massive`);
-const corsOptions = {origin: 'http://localhost:3005'};
-const config = require(`./.server.config.js`);
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
-const massiveInstance = massive.connectSync({connectionString: config.connectionString});
+const express = require(`express`),
+      jwt = require(`express-jwt`),
+      app = module.exports = express(),
+      axios = require(`axios`),
+      bodyParser = require(`body-parser`),
+      cors = require(`cors`),
+      massive = require(`massive`),
+      corsOptions = {origin: 'http://localhost:3005'},
+      config = require(`./.server.config.js`),
+      server = require('http').Server(app),
+      io = require('socket.io')(server),
+      massiveInstance = massive.connectSync({connectionString: config.connectionString});
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
-const aws = require('aws-sdk')
-const multer = require('multer')
-const multerS3 = require('multer-s3')
-const s3 = new aws.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: "us-west-2",
-});
+const aws = require('aws-sdk'),
+    multer = require('multer'),
+    multerS3 = require('multer-s3'),
+    s3 = new aws.S3({
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: "us-west-2",
+    }),
 
-// Initialize multers3 with our s3 config and other options
-const upload = multer({
-    storage: multerS3({
-        s3,
-        bucket: process.env.AWS_BUCKET,
-        acl: 'public-read',
-        metadata(req, file, cb) {
-            cb(null, {fieldName: file.fieldname});
-        },
-        key(req, file, cb) {
-            cb(null, Date.now().toString() + '.png');
-        }
-    })
-})
+    upload = multer({
+        storage: multerS3({
+            s3,
+            bucket: process.env.AWS_BUCKET,
+            acl: 'public-read',
+            metadata(req, file, cb) {
+                cb(null, {fieldName: file.fieldname});
+            },
+            key(req, file, cb) {
+                cb(null, Date.now().toString() + '.png');
+            }
+        })
+    });
 
-// Expose the /upload endpoint
 
 
 
@@ -56,9 +54,9 @@ app.use(express.static(`public`));
 
 // --------- SOCKET.IO CHAT-START -------------- //
 
-const chat = require('./chat.js')
+const chat = require('./chat.js');
 
-chat.connect(io)
+chat.connect(io);
 app.get('/api/chat/search/:userid/:search', chat.searchFriends(db))
 app.get('/api/chat/findUser/:userid', chat.findUser(db))
 app.post('/api/chat', chat.newMessage(io, db))
